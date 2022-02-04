@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package uwGrpc;
+
+option go_package = ".;userwatchgo";
+
+import "google/protobuf/timestamp.proto";
+
+enum EventType {
+    UNKNOWN_DEFAULT_EVENTTYPE = 0;
+    LOGIN = 1;
+    REGISTER = 2;
+    ATTEMPT_PURCHASE = 3;
+    COMPLETE_PURCHASE = 4;
+    ATTEMPT_REDEEM_OFFER = 5;
+    REDEEMED_OFFER = 6;
+    VERIFY_DEVICE = 7;
+    REPORT_DEVICE = 8;
+    ADD_TEAM_MEMBER = 9;
+    REMOVE_TEAM_MEMBER = 10;
+    ADD_PAYMENT_METHOD = 11;
+    ATTEMPT_DELETE_ACCOUNT = 12;
+    CUSTOMER_DEFINED_EVENTTYPE = 13;
+    START_SUBSCRIPTION = 14;
+    END_SUBSCRIPTION = 15;
+    HEARTBEAT = 16;
+    PAGE_VISIT = 17;
+    LOGIN_SUCCESS = 18;
+    REGISTER_SUCCESS = 19;
+}
+
+enum ChallengeType {
+    UNKNOWN_DEFAULT_CHALLENGE_TYPE = 0;
+    CHALLENGE_TYPE_WEBAUTHN = 1;
+    CHALLENGE_TYPE_SMS = 2;
+    CHALLENGE_TYPE_EMAIL = 3;
+    CHALLENGE_TYPE_BANKSY = 4;
+}
+
+message UserInfo {
+    string userID = 1;
+    string userEmail = 2;
+    string userPhone = 3;
+    string userName = 4;
+    string userImage = 5;
+    map<string, string> customerSuppliedValues = 6;
+}
+
+enum Outcome {
+    UNKNOWN_DEFAULT_OUTCOME = 0;
+    DENY = 1;
+    CHALLENGE = 2;
+    PERMIT = 3;
+    OFFER = 4;
+    LOG = 5;
+    CUSTOMER_DEFINED_OUTCOME = 6;
+}
+
+message GeoInfo {
+    LatLng geoIPLatLng = 1;
+    string geoIPCity = 2;
+    string geoIPSubRegion = 3;
+    string geoIPRegion = 4;
+    google.protobuf.Timestamp lastHere = 5;
+}
+
+
+message LatLng {
+  // The latitude in degrees. It must be in the range [-90.0, +90.0].
+  double latitude = 1;
+
+  // The longitude in degrees. It must be in the range [-180.0, +180.0].
+  double longitude = 2;
+}
+
+message DeviceInfo {
+    string deviceID = 1;
+    string OS = 2;
+    DeviceClass deviceClass = 3;
+    string deviceName = 4;
+    string userAgent = 5;
+    string browser = 6;
+    google.protobuf.Timestamp lastUsed = 7; 
+    bool blockedGlobally = 8;
+    bool blockedForThisUser = 9; // Will always be false if request is unrelated to a single user
+}
+
+enum DeviceClass {
+    DESKTOP = 0;
+    MOBILE = 1;
+    TABLET = 2;
+    GOODBOT = 3;
+    BADBOT = 4;
+    UNKNOWN = 5;
+}
+
+enum FlagType {
+    UNKNOWN_DEFAULT_FLAGTYPE = 0;
+    ACCOUNT_SHARING = 1;
+    ACCOUNT_SHARING_SAME_HOUSEHOLD = 2;
+    SUSPECTED_ACCOUNT_COMPROMISE = 3;
+    CREDENTIAL_STUFFING = 4;
+    REPEATED_REDEMPTION = 5;
+    SUSPECTED_FRAUD = 6;
+    REPEATED_SIGNUP = 7;
+    SUSPECTED_BOT = 8;
+    RATE_LIMITED_IP = 9;
+    RATE_LIMITED_DEVICE = 10;
+    BLACKLISTED_IP = 11;
+    BLACKLISTED_DEVICE  = 12; // DEPRECATED
+    ACCOUNT_COMPROMISE_NEW_LOCATION = 13;
+    ACCOUNT_COMPROMISE_NEW_DEVICE = 14;
+    REPEATED_ACTION = 15;
+    DISPOSABLE_EMAIL = 16;
+    USING_VPN = 17;
+    USING_TOR = 18;
+    DEVICE_BLOCKED_GLOBAlLY = 19;
+    DEVICE_BLOCKED_FOR_THIS_USER = 20;
+    INVALID_EMAIL = 21;
+    INVALID_PHONE_NUMBER = 23;
+    INVALID_PHONE_TYPE = 22;
+    MULTIPLE_ACCOUNTS = 24;
+    ALREADY_USED_EMAIL = 25;
+    ALREADY_USED_PHONE = 26;
+}
+
+message Flags {
+    repeated Flag flag = 1;
+}
+
+message Flag {
+    FlagType type = 1;
+    google.protobuf.Timestamp firstFlagged = 2;
+    google.protobuf.Timestamp mostRecentlyFlagged = 3;
+    // Max time will be used to say forever, nil is not ignored
+    google.protobuf.Timestamp ignoredUntil = 4;
+}
+
+message ValidateResponse {
+    string validationToken = 1;
+    string validationSignature = 2;
+}

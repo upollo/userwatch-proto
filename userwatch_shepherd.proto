@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package uwGrpc;
+
+option go_package = ".;userwatchgo";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "userwatch_shared.proto";
+
+// Server to server APIs
+service Shepherd {
+    // Requests and Validation 
+    rpc validate (ValidationRequest) returns (AnalysisResponsePublic) {};
+
+    rpc getDeviceList (DeviceListRequest) returns (DeviceListResponse) {};
+
+    // Verifying Challenge Responses
+    rpc createChallenge (CreateChallengeRequest) returns (CreateChallengeResponse) {};
+    rpc verifyChallenge (ChallengeVerificationRequest) returns (ChallengeVerificationResponse) {};    
+}
+
+message AnalysisResponsePublic {
+    Outcome action = 1;
+    bool isUsingVPN = 3;
+    bool isUsingTOR = 4;
+    repeated Flag flag = 6;
+    UserInfo userInfo = 7;
+    DeviceInfo deviceInfo = 8;
+    GeoInfo geoInfo = 9;
+    string requestID = 10;
+    repeated ChallengeType supportedChallenges = 11;
+    EventType eventType = 12;
+}
+
+message DeviceListRequest {
+    string userID = 1;
+}
+
+message DeviceListResponse {
+    repeated DeviceInfo devices = 1;
+}
+
+message ValidationRequest {
+    string validationToken = 1;
+    UserInfo userinfo = 2;
+    ChallengeVerificationRequest challengeVerification = 4;
+    EventType eventType = 5;
+    string customerDefinedEventType = 6;
+    string subEventType = 8;
+}
+
+message ChallengeVerificationRequest {
+    string challengeID = 1;
+    string secretResponse = 2;
+    bytes webauthnCredentialResponse = 3;
+    UserInfo userinfo = 6; // Not required if sending with a validation request
+    string deviceID = 7; // Not required if sending with a validation request
+    ChallengeType type = 5;
+    string reportToken = 8;
+}
+
+message ChallengeVerificationResponse {
+    google.protobuf.BoolValue challengeCompletedSuccessfully = 1;
+    EventType eventType = 3;
+    string customerDefinedEventType = 4;
+    string subEventType = 5;
+}
+
+message CreateChallengeRequest {
+    ChallengeType type = 1;
+    UserInfo userinfo = 2; // Userinfo is used for phone numbers and email details
+    string deviceID = 4;
+    string origin = 5; // Required for webauthn and should be consistent eg. login.company.com or similar
+    EventType eventType = 6;
+    string customerDefinedEventType = 7;
+    string subEventType = 8;
+}
+
+// An error will be returned if creating the challenge fails (eg. phone number is out of service, email bounces)
+message CreateChallengeResponse {
+    string challengeID = 1;
+    google.protobuf.Timestamp expiry = 2;
+    bytes webauthnCredentials = 3;
+    ChallengeType type = 4;
+}
