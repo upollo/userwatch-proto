@@ -1,86 +1,168 @@
 syntax = "proto3";
 
-package uwGrpc;
-
-option go_package = ".;userwatchgo";
+package uwproto;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
-import "userwatch_shared.proto";
+import "userwatch_public.proto";
+
+option go_package = "github.com/userwatch/uw1/protos/uwprotoshepherd";
+option java_multiple_files = true;
+option java_package = "co.userwatch.proto";
+option objc_class_prefix = "UwProto";
+
 
 // Server to server APIs
+
+// Shepherd is the service by which customer servers can talk with Userwatch
+// in backend integrations. While we may wrap it in libraries, customers can
+// interact with it directly too. The caller is authenticated via project
+// private api keys.
 service Shepherd {
-    // Requests and Validation 
-    rpc validate (ValidationRequest) returns (AnalysisResponsePublic) {};
 
-    rpc getDeviceList (DeviceListRequest) returns (DeviceListResponse) {};
+  // Requests and Validation
+  rpc Validate (ValidationRequest) returns (AnalysisResponse) {};
 
-    // Verifying Challenge Responses
-    rpc createChallenge (CreateChallengeRequest) returns (CreateChallengeResponse) {};
-    rpc verifyChallenge (ChallengeVerificationRequest) returns (ChallengeVerificationResponse) {};    
+  // Track events
+  rpc Track (TrackEventRequest) returns (AnalysisResponse) {};
+
+  // Verifying Challenge Responses
+  rpc CreateChallenge (CreateChallengeRequest)
+      returns (CreateChallengeResponse) {};
+  rpc VerifyChallenge (ChallengeVerificationRequest)
+      returns (ChallengeVerificationResponse) {};
+
+  // User Management
+  rpc ApproveDevice (DeviceRequest) returns (DeviceResponse) {};
+  rpc ReportDevice (DeviceRequest) returns (DeviceResponse) {};
+  rpc GetDeviceList (DeviceListRequest) returns (DeviceListResponse) {};
+
+  // Context specific API calls (eg. Firebase)
+  // This could be made more generic eg. Fetch matching request?
+  rpc ValidateLastRequest (ValidateLastRequestRequest)
+      returns (ValidateLastRequestResponse) {};
 }
 
-message AnalysisResponsePublic {
-    Outcome action = 1;
-    bool isUsingVPN = 3;
-    bool isUsingTOR = 4;
-    repeated Flag flag = 6;
-    UserInfo userInfo = 7;
-    DeviceInfo deviceInfo = 8;
-    GeoInfo geoInfo = 9;
-    string requestID = 10;
-    repeated ChallengeType supportedChallenges = 11;
-    EventType eventType = 12;
+message WebHookRequest {
+  AnalysisResponse analysis = 1;
+  string project_id = 2;
+  repeated string urls = 3;
+  string web_hook_key = 4;
+}
+
+message WebHookResponse {
+  AnalysisResponse analysis = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+
+message DeviceRequest {
+  string device_id = 1;
+
+  // UserID of to block or approve this device for. Cannot be used with global
+  string user_id = 2;
+
+  // Block or approve this device globally. Cannot be used with user_id
+  bool global = 3;
+}
+
+message DeviceResponse {
+  bool success = 1;
 }
 
 message DeviceListRequest {
-    string userID = 1;
+  string user_id = 1;
 }
 
 message DeviceListResponse {
-    repeated DeviceInfo devices = 1;
+  repeated DeviceInfo devices = 1;
+}
+
+message SignedToken {
+  bytes payload = 1;
+  bytes signature = 2;
+  bytes nonce = 3;
+  google.protobuf.Timestamp timestamp = 4;
 }
 
 message ValidationRequest {
-    string validationToken = 1;
-    UserInfo userinfo = 2;
-    ChallengeVerificationRequest challengeVerification = 4;
-    EventType eventType = 5;
-    string customerDefinedEventType = 6;
-    string subEventType = 8;
+  string validation_token = 1;
+  UserInfo userinfo = 2;
+  ChallengeVerificationRequest challenge_verification = 4;
+  EventType event_type = 5;
+  string customer_defined_event_type = 6;
+  string sub_event_type = 8;
 }
 
 message ChallengeVerificationRequest {
-    string challengeID = 1;
-    string secretResponse = 2;
-    bytes webauthnCredentialResponse = 3;
-    UserInfo userinfo = 6; // Not required if sending with a validation request
-    string deviceID = 7; // Not required if sending with a validation request
-    ChallengeType type = 5;
-    string reportToken = 8;
+  string challenge_id = 1;
+  string secret_response = 2;
+  bytes webauthn_credential_response = 3;
+
+  // Not required if sending with a validation request
+  UserInfo userinfo = 6;
+  // Not required if sending with a validation request
+  string device_id = 7;
+  // Not required if sending with a validation request
+  //ReportRequest report = 4;
+
+  ChallengeType type = 5;
+  string report_token = 8;
 }
 
 message ChallengeVerificationResponse {
-    google.protobuf.BoolValue challengeCompletedSuccessfully = 1;
-    EventType eventType = 3;
-    string customerDefinedEventType = 4;
-    string subEventType = 5;
+  google.protobuf.BoolValue challenge_completed_successfully = 1;
+  EventType event_type = 3;
+  string customer_defined_event_type = 4;
+  string sub_event_type = 5;
 }
 
 message CreateChallengeRequest {
-    ChallengeType type = 1;
-    UserInfo userinfo = 2; // Userinfo is used for phone numbers and email details
-    string deviceID = 4;
-    string origin = 5; // Required for webauthn and should be consistent eg. login.company.com or similar
-    EventType eventType = 6;
-    string customerDefinedEventType = 7;
-    string subEventType = 8;
+  ChallengeType type = 1;
+
+  // Userinfo is used for phone numbers and email details
+  UserInfo userinfo = 2;
+
+  string device_id = 4;
+
+  // Required for webauthn
+  // Should be consistent eg. login.company.com or similar
+  string origin = 5;
+
+  EventType event_type = 6;
+  string customer_defined_event_type = 7;
+  string sub_event_type = 8;
 }
 
-// An error will be returned if creating the challenge fails (eg. phone number is out of service, email bounces)
+// An error will be returned if creating the challenge fails (eg. phone
+// number is out of service, email bounces)
 message CreateChallengeResponse {
-    string challengeID = 1;
-    google.protobuf.Timestamp expiry = 2;
-    bytes webauthnCredentials = 3;
-    ChallengeType type = 4;
+  string challenge_id = 1;
+  google.protobuf.Timestamp expiry = 2;
+  bytes webauthn_credentials = 3;
+  ChallengeType type = 4;
+}
+
+message ValidateLastRequestRequest {
+  string event_id = 1;
+  string ip = 2;
+  string user_agent = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  string email = 5;
+  bool email_verified = 6;
+  string phone_number = 7;
+  string uid = 8;
+  string provider_id = 9;
+  EventType event_type = 10;
+}
+
+message TrackEventRequest {
+  UserInfo userinfo = 1;
+  Event event = 2;
+}
+
+message ValidateLastRequestResponse{
+  Outcome outcome = 1;
+  Flags flags = 2;
+  google.protobuf.Timestamp timestamp = 3;
 }
