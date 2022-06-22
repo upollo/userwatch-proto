@@ -35,6 +35,7 @@ enum EventType {
   EVENT_TYPE_PAGE_VISIT = 17;
   EVENT_TYPE_LOGIN_SUCCESS = 18;
   EVENT_TYPE_REGISTER_SUCCESS = 19;
+  EVENT_TYPE_INTERNAL = 20;
 }
 
 message AnalysisResponse {
@@ -80,9 +81,11 @@ message AnalysisResponse {
   reserved "trustScore", "history";
 }
 
-message ValidateResponse {
-  // A token to be sent to your server for use with a Userwatch server API.
-  string validation_token = 1;
+message EventResponse {
+  // A token which can be sent to your own server so it can dig into the
+  // assessment of a user following events being reported for tracking by
+  // your client application.
+  string event_token = 1;
 
   reserved 2;
   reserved "validation_signature";
@@ -171,8 +174,6 @@ enum AddressType {
   ADDRESS_TYPE_OTHER = 3;
 }
 
-
-
 message DeviceInfo {
   string device_id = 1;
   string os = 2;
@@ -230,16 +231,16 @@ message Event {
   google.protobuf.Timestamp timestamp = 4;
 }
 
-message CheckEmailResponse{
+message CheckEmailResponse {
   bool valid = 1;
   EmailInvalidReason reason = 2;
 }
 
-message CheckPasswordResponse{
+message CheckPasswordResponse {
   bool compromised = 1;
 }
 
-message CheckPhoneResponse{
+message CheckPhoneResponse {
   bool valid = 1;
   PhoneInvalidReason reason = 2;
   string country_code = 3;
@@ -247,7 +248,6 @@ message CheckPhoneResponse{
   string carrier = 5;
   string clean_number = 6;
 }
-
 
 enum EmailInvalidReason {
   EMAIL_INVALID_REASON_UNSPECIFIED = 0;
