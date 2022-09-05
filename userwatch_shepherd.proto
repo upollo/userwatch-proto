@@ -20,27 +20,29 @@ option objc_class_prefix = "UwProto";
 // private api keys.
 service Shepherd {
 
-  // Requests and Validation
-  rpc Validate (ValidationRequest) returns (AnalysisResponse) {};
+  // Inform Userwatch of an event in your application.
+  //
+  // Include any UserInfo you have, or an empty UserInfo if you have none.
+  rpc Track (TrackEventRequest) returns (AnalysisResponse);
 
-  // Track events
-  rpc Track (TrackEventRequest) returns (AnalysisResponse) {};
+  // Access the assessment of a user for whom an event was previously
+  // registered with Userwatch via a track(UserInfo, EventType) call from
+  // your client application.
+  //
+  // At this point you can also attach any additional UserInfo your server
+  // has which your client might not have had available.
+  rpc Verify (VerifyRequest) returns (AnalysisResponse);
 
   // Verifying Challenge Responses
   rpc CreateChallenge (CreateChallengeRequest)
-      returns (CreateChallengeResponse) {};
+      returns (CreateChallengeResponse);
   rpc VerifyChallenge (ChallengeVerificationRequest)
-      returns (ChallengeVerificationResponse) {};
+      returns (ChallengeVerificationResponse);
 
   // User Management
-  rpc ApproveDevice (DeviceRequest) returns (DeviceResponse) {};
-  rpc ReportDevice (DeviceRequest) returns (DeviceResponse) {};
-  rpc GetDeviceList (DeviceListRequest) returns (DeviceListResponse) {};
-
-  // Context specific API calls (eg. Firebase)
-  // This could be made more generic eg. Fetch matching request?
-  rpc ValidateLastRequest (ValidateLastRequestRequest)
-      returns (ValidateLastRequestResponse) {};
+  rpc ApproveDevice (DeviceRequest) returns (DeviceResponse);
+  rpc ReportDevice (DeviceRequest) returns (DeviceResponse);
+  rpc GetDeviceList (DeviceListRequest) returns (DeviceListResponse);
 }
 
 message WebHookRequest {
@@ -85,13 +87,15 @@ message SignedToken {
   google.protobuf.Timestamp timestamp = 4;
 }
 
-message ValidationRequest {
-  string validation_token = 1;
+message VerifyRequest {
+  string event_token = 1;
   UserInfo userinfo = 2;
   ChallengeVerificationRequest challenge_verification = 4;
-  EventType event_type = 5;
-  string customer_defined_event_type = 6;
-  string sub_event_type = 8;
+
+  // The following information is redundant with the event_token
+  EventType event_type = 5 [deprecated = true];
+  string customer_defined_event_type = 6 [deprecated = true];
+  string sub_event_type = 8 [deprecated = true];
 }
 
 message ChallengeVerificationRequest {
@@ -143,26 +147,7 @@ message CreateChallengeResponse {
   ChallengeType type = 4;
 }
 
-message ValidateLastRequestRequest {
-  string event_id = 1;
-  string ip = 2;
-  string user_agent = 3;
-  google.protobuf.Timestamp timestamp = 4;
-  string email = 5;
-  bool email_verified = 6;
-  string phone_number = 7;
-  string uid = 8;
-  string provider_id = 9;
-  EventType event_type = 10;
-}
-
 message TrackEventRequest {
   UserInfo userinfo = 1;
   Event event = 2;
-}
-
-message ValidateLastRequestResponse{
-  Outcome outcome = 1;
-  Flags flags = 2;
-  google.protobuf.Timestamp timestamp = 3;
 }
