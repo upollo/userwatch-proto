@@ -8,8 +8,8 @@ import "userwatch_public.proto";
 
 option go_package = "github.com/userwatch/uw1/protos/uwprotoshepherd";
 option java_multiple_files = true;
-option java_package = "co.userwatch.proto";
-option objc_class_prefix = "UwProto";
+option java_package = "ai.upollo.proto";
+option objc_class_prefix = "UpProto";
 
 
 // Server to server APIs
