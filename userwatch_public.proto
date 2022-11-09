@@ -11,8 +11,9 @@ import "google/type/postal_address.proto";
 
 option go_package = "github.com/userwatch/uw1/protos/uwproto";
 option java_multiple_files = true;
-option java_package = "co.userwatch.proto";
-option objc_class_prefix = "UwProto";
+option java_package = "ai.upollo.proto";
+option objc_class_prefix = "UpProto";
+option swift_prefix = "UpProto_";
 
 enum EventType {
   EVENT_TYPE_UNSPECIFIED = 0;
@@ -76,6 +77,9 @@ message AnalysisResponse {
 
   // Event type which resulted in this analysis being done.
   EventType event_type = 12;
+
+  CheckEmailResponse email_analysis = 13;
+  CheckPhoneResponse phone_analysis = 14;
 
   reserved 2, 5;
   reserved "trustScore", "history";
@@ -241,6 +245,8 @@ message Event {
 message CheckEmailResponse {
   bool valid = 1;
   EmailInvalidReason reason = 2;
+  EmailType email_type = 3;
+  CompanyData company = 4;
 }
 
 message CheckPasswordResponse {
@@ -262,6 +268,16 @@ enum EmailInvalidReason {
   EMAIL_INVALID_REASON_INVALID_DOMAIN = 2;
   EMAIL_INVALID_REASON_DISPOSABLE = 3;
   EMAIL_INVALID_REASON_INVALID_USER = 4;
+}
+
+enum EmailType {
+  EMAIL_TYPE_UNSPECIFIED = 0;
+  EMAIL_TYPE_PUBLIC = 1;
+  EMAIL_TYPE_DISPOSABLE = 2;
+  EMAIL_TYPE_COMPANY = 3;
+  EMAIL_TYPE_OTHER = 4;
+  EMAIL_TYPE_EDUCATION = 5;
+  EMAIL_TYPE_NFP = 6;
 }
 
 enum PhoneLineType {
@@ -287,4 +303,15 @@ enum NullableBool {
   NULLABLE_BOOL_UNSPECIFIED = 0;
   NULLABLE_BOOL_FALSE = 1;
   NULLABLE_BOOL_TRUE = 2;
+}
+
+message CompanySize {
+  int32 employees_min = 1;
+  int32 employees_max = 2;
+}
+
+message CompanyData {
+  string name = 1;
+  string industry = 2;
+  CompanySize company_size = 3;
 }
