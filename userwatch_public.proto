@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-// Protocol buffer definitions used when interacting with Userwatch's customer
+// Protocol buffer definitions used when interacting with Upollo's customer
 // libraries.
 
 package uwproto;
@@ -15,21 +15,53 @@ option java_package = "ai.upollo.proto";
 option objc_class_prefix = "UpProto";
 option swift_prefix = "UpProto_";
 
+// Events relating to general user activity in the application.
 enum EventType {
   EVENT_TYPE_UNSPECIFIED = 0;
+  // EVENT_TYPE_LOGIN should be sent immediately before a login attempt. The
+  // login may still fail due to invalid credentials, and this is fine because
+  // the EVENT_TYPE_LOGIN_SUCCESS is for when the login is actually successful.
   EVENT_TYPE_LOGIN = 1;
+  // EVENT_TYPE_REGISTER should be sent immediately before a customer a customer
+  // attempts to register an account.
   EVENT_TYPE_REGISTER = 2;
+  // EVENT_TYPE_ATTEMPT_PURCHASE should be sent immediately before a purchase.
+  // attempt You should track this event regardless of whether the purchase
+  // succeeds or fails. If the purchase succeeds, you should additionally track
+  // EVENT_TYPE_COMPLETE_PURCHASE.
   EVENT_TYPE_ATTEMPT_PURCHASE = 3;
+  // EVENT_TYPE_COMPLETE_PURCHASE should be sent immediately after a successful
+  // purchase.
   EVENT_TYPE_COMPLETE_PURCHASE = 4;
+  // EVENT_TYPE_ATTEMPT_REDEEM_OFFER should be sent immediately before an
+  // attempt to redeem an offer. You should track this event regardless of
+  // whether the redemption succeeds or fails. If the redemption succeeds,
+  // you should additionally track EVENT_TYPE_REDEEMED_OFFER.
   EVENT_TYPE_ATTEMPT_REDEEM_OFFER = 5;
+  // EVENT_TYPE_REDEEMED_OFFER should be sent after the customer has
+  // successfully redeemed an offer.
   EVENT_TYPE_REDEEMED_OFFER = 6;
+  // EVENT_TYPE_ADD_PAYMENT_METHOD should be sent immediately after the customer
+  // has successfully added a new payment method.
   EVENT_TYPE_ADD_PAYMENT_METHOD = 11;
+  // EVENT_TYPE_START_SUBSCRIPTION should be sent immediately after a
+  // subscription has started.
   EVENT_TYPE_START_SUBSCRIPTION = 14;
+  // EVENT_TYPE_END_SUBSCRIPTION should be sent immediately after a subscription
+  // is ended.
   EVENT_TYPE_END_SUBSCRIPTION = 15;
+  // EVENT_TYPE_HEARTBEAT should be sent at regular intervals if no other events
+  // are sent. We recommend every 30 minutes.
   EVENT_TYPE_HEARTBEAT = 16;
+  // EVENT_TYPE_PAGE_VISIT should be sent when a page or screen is loaded.
   EVENT_TYPE_PAGE_VISIT = 17;
+  // EVENT_TYPE_LOGIN_SUCCESS should be sent immediately after a successful
+  // login. This does not include a token renewal.
   EVENT_TYPE_LOGIN_SUCCESS = 18;
+  // EVENT_TYPE_REGISTER_SUCCESS should be sent after the customer has
+  // successfully registered a new account.
   EVENT_TYPE_REGISTER_SUCCESS = 19;
+  // EVENT_TYPE_INTERNAL is used internally and you should not use it.
   EVENT_TYPE_INTERNAL = 20;
 
   // Deprecated fields: do not use.
@@ -42,32 +74,32 @@ enum EventType {
 }
 
 message AnalysisResponse {
-  // Recommended action based on the Userwatch analysis.
+  // Recommended action based on the Upollo analysis.
   Outcome action = 1;
 
-  // All flags the Userwatch analysis identified.
+  // All flags the Upollo analysis identified.
   // Note any flags with an ignored_until value after the present should
   // generally be treated as if they were not present. Those ignored flags are
   // already excluded from factoring into the action Outcome above.
   repeated Flag flags = 6;
 
 
-  // True if Userwatch detects a VPN is being used.
+  // True if Upollo detects a VPN is being used.
   // Deprecated: This is available as in flags as type USING_VPN
   bool is_using_vpn = 3 [deprecated = true];
 
-  // True if Userwatch detects TOR is being used.
+  // True if Upollo detects TOR is being used.
   // Deprecated: This is available in flags as type USING_TOR
   bool is_using_tor = 4 [deprecated = true];
 
 
-  // Information Userwatch discerned about the user.
+  // Information Upollo discerned about the user.
   UserInfo user_info = 7;
 
-  // Information Userwatch discerned about the device.
+  // Information Upollo discerned about the device.
   DeviceInfo device_info = 8;
 
-  // Geographic information discerned by Userwatch.
+  // Geographic information discerned by Upollo.
   GeoInfo geo_info = 9;
 
 
@@ -97,10 +129,16 @@ message EventResponse {
   reserved "validation_signature";
 }
 
+// The recommended action based on Upollo's analysis. See the other information
+//  in the AnalysisReponse for reasons behind the outcome.
 enum Outcome {
   OUTCOME_UNSPECIFIED = 0;
+  // OUTCOME_DENY indicates the user should be denied access.
   OUTCOME_DENY = 1;
+  // OUTCOME_CHALLENGE indicates there is something suspcious about the user, so
+  // they should be sent a challenge (e.g. SMS) to confirm their identiy.
   OUTCOME_CHALLENGE = 2;
+  // OUTCOME_PERMIT indicates the user is genuine.
   OUTCOME_PERMIT = 3;
   OUTCOME_OFFER = 4;
   OUTCOME_LOG = 5;
@@ -108,8 +146,11 @@ enum Outcome {
 }
 
 message Flag {
+  // The type of flag.
   FlagType type = 1;
+  // The timestamp that the flag was first flagged.
   google.protobuf.Timestamp first_flagged = 2;
+  // The timestamp that the flag was most recently flagged.
   google.protobuf.Timestamp most_recently_flagged = 3;
 
   // A nil ignored_until value, or a non-nil value before the present, means
@@ -130,16 +171,28 @@ enum FlagType {
   // ACCOUNT_SHARING indicates that the same account is being shared by 
   // multiple people, typically on multiple devices.
   ACCOUNT_SHARING = 1;
+  // ACCOUNT_SHARING_SAME_HOUSEHOLD indicates that the same account is being
+  // shared by multiple people in the same household, typically on multiple
+  // devices.
   ACCOUNT_SHARING_SAME_HOUSEHOLD = 2;
+  // SUSPECTED_ACCOUNT_COMPROMISE indicates that the account may have been
+  // compromised, as there is suspcious activity associated with the account.
   SUSPECTED_ACCOUNT_COMPROMISE = 3;
+  // CREDENTIAL_STUFFING indicates that the account has been used in a
+  // credential stuffing attack.
   CREDENTIAL_STUFFING = 4;
+  // REPEATED_REDEMPTION indicates that the account has previous redeemed an
+  // offer.
   REPEATED_REDEMPTION = 5;
+  // SUSPECTED_FRAUD indicates that there is suspected fraud associated with
+  // the account.
   SUSPECTED_FRAUD = 6;
   // REPEATED_SIGNUP indicates if the current event type is
   // EventType_EVENT_TYPE_REGISTER and there has previously
   // been an event of that type from this device or the email/phone
   // has already been used.
   REPEATED_SIGNUP = 7;
+  // SUSPECTED_BOT indicates that the account is suspected to be a bot.
   SUSPECTED_BOT = 8;
   RATE_LIMITED_IP = 9;
   RATE_LIMITED_DEVICE = 10;
@@ -147,13 +200,17 @@ enum FlagType {
   BLACKLISTED_DEVICE  = 12; // DEPRECATED
   ACCOUNT_COMPROMISE_NEW_LOCATION = 13;
   ACCOUNT_COMPROMISE_NEW_DEVICE = 14;
+  // The account is using a disposable email address.
   DISPOSABLE_EMAIL = 16;
   USING_VPN = 17;
   USING_TOR = 18;
   DEVICE_BLOCKED_GLOBALLY = 19;
   DEVICE_BLOCKED_FOR_THIS_USER = 20;
+  // The email is invalid.
   INVALID_EMAIL = 21;
+  // The phone number is invalid.
   INVALID_PHONE_NUMBER = 23;
+  // The type of phone is invalid.
   INVALID_PHONE_TYPE = 22;
   // MULTIPLE_ACCOUNTS indicates that the same person is using multiple accounts
   // typically on the same device.
@@ -163,12 +220,19 @@ enum FlagType {
 }
 // protolint:enable ENUM_FIELD_NAMES_PREFIX
 
+// Information about a user.
 message UserInfo {
+  // A unique identifier for the user.
   string user_id = 1;
+  // The user's email address.
   string user_email = 2;
+  // The user's phone number.
   string user_phone = 3;
+  // the user's name.
   string user_name = 4;
+  // An image of the user.
   string user_image = 5;
+  // A generic map to allow you to add your own values.
   map<string, string> customer_supplied_values = 6;
 
   // Address information, this would typically be shipping or home address
@@ -176,25 +240,39 @@ message UserInfo {
 }
 
 message PhysicalAddress {
+  // The type of address (e.g. home, work).
   AddressType type = 1;
+  // The address.
   google.type.PostalAddress address = 2;
 }
 
+// The type of physical address.
 enum AddressType {
   ADDRESS_TYPE_UNSPECIFIED = 0;
+  // The address is at a residential location.
   ADDRESS_TYPE_HOME = 1;
+  // The address is at a work location.
   ADDRESS_TYPE_WORK = 2;
   ADDRESS_TYPE_OTHER = 3;
 }
 
+// Information about a device.
 message DeviceInfo {
+  // A unique identifier for the device.
   string device_id = 1;
+  // The operating system that the device is using.
   string os = 2;
+  // The type of device (mobile, desktop, tablet, bot etc).
   DeviceClass device_class = 3;
+  // The name of the device.
   string device_name = 4;
+  // User agent string for the device.
   string user_agent = 5;
+  // Browser that the device is using
   string browser = 6;
+  // Timestamp that the device was last used.
   google.protobuf.Timestamp last_used = 7;
+  // If true, the device is blocked globally.
   bool blocked_globally = 8;
 
   // Will always be false if request is unrelated to a single user
@@ -203,20 +281,33 @@ message DeviceInfo {
 
 enum DeviceClass {
   // protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
+  // DEVICE_CLASS_DESKTOP indicates the device is a desktop computer.
   DEVICE_CLASS_DESKTOP = 0;
   // protolint:enable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
+  // DEVICE_CLASS_MOBILE indicates the device is a mobile.
   DEVICE_CLASS_MOBILE = 1;
+  // DEVICE_CLASS_TABLET indicates the device is a tablet.
   DEVICE_CLASS_TABLET = 2;
+  // DEVICE_CLASS_GOODBOT indicates the "device" is actually a bot, but one
+  // that is typically allowed (such as the Googlebot web crawler).
   DEVICE_CLASS_GOODBOT = 3;
+  // DEVICE_CLASS_BADBOT indicates the "device" is actually a bot, but one that
+  // is known for bad activity.
   DEVICE_CLASS_BADBOT = 4;
   DEVICE_CLASS_UNKNOWN = 5;
 }
 
+// Encapsulates geographical information.
 message GeoInfo {
+  // A lat-lng for the location.
   LatLng geo_ip_latlng = 1;
+  // The name of the city for the location.
   string geo_ip_city = 2;
+  // The name of the subregion for the location.
   string geo_ip_subregion = 3;
+  // The name of the region for the location.
   string geo_ip_region = 4;
+  // A timestamp for when the location was last seen.
   google.protobuf.Timestamp last_here = 5;
 }
 
@@ -236,84 +327,148 @@ enum ChallengeType {
   CHALLENGE_TYPE_BANKSY = 4;
 }
 
+// An event, such as a user logging in.
 message Event {
+  // The event type can be either one of Upollo's EventTypes or a custom one.
   oneof event_type {
     uwproto.EventType event_type_enum = 1;
     string customer_defined_event_type = 2;
   }
+  // The timestamp that the event occurred.
   google.protobuf.Timestamp timestamp = 4;
 }
 
+// Contains the results of checking the validity of an email address.
 message CheckEmailResponse {
+  // If true, the email address is valid.
   bool valid = 1;
+  // If the email address is invalid, a reason indicating why.
   EmailInvalidReason reason = 2;
+  // The type of email address, such as company, education, public.
   EmailType email_type = 3;
+  // If the email is associated with a company or education institution, data
+  // about the company/institution.
   CompanyData company = 4;
 }
 
+// Contains the results of checking a password for leaks.
 message CheckPasswordResponse {
   bool compromised = 1;
 }
 
+// Contains the results of checking the validity of a phone number.
 message CheckPhoneResponse {
+  // If true, the phone number is valid.
   bool valid = 1;
+  // If the number is invalid, a reason indicating why.
   PhoneInvalidReason reason = 2;
+  // The phone number's country code.
   string country_code = 3;
+  // The phone number's line type.
   PhoneLineType line_type = 4;
+  // The phone number's carrier.
   string carrier = 5;
+  // A clean, consistently formatted phone number.
   string clean_number = 6;
 }
 
+// A reason why the email address is not valid.
 enum EmailInvalidReason {
   EMAIL_INVALID_REASON_UNSPECIFIED = 0;
+  // EMAIL_INVALID_REASON_FORMAT indicates the email address is incorrectly
+  // formatted.
   EMAIL_INVALID_REASON_FORMAT = 1;
+  // EMAIL_INVALID_REASON_INVALID_DOMAIN indicates the email address is from
+  // a domain that is invalid (e.g. doesn't exist).
   EMAIL_INVALID_REASON_INVALID_DOMAIN = 2;
+  // EMAIL_INVALID_REASON_DISPOSABLE indicates the email address is a disposable
+  // email.
   EMAIL_INVALID_REASON_DISPOSABLE = 3;
+  // EMAIL_INVALID_REASON_INVALID_USER indiciates the email address has an
+  // invalid user.
   EMAIL_INVALID_REASON_INVALID_USER = 4;
 }
 
+// The type of email address.
 enum EmailType {
   EMAIL_TYPE_UNSPECIFIED = 0;
+  // EMAIL_TYPE_PUBLIC indicates the email address is publicly available, such
+  // as from Gmail, Yahoo, Hotmail etc.
   EMAIL_TYPE_PUBLIC = 1;
+  // EMAIL_TYPE_DISPOSABLE indicates the email address is disposable.
   EMAIL_TYPE_DISPOSABLE = 2;
+  // EMAIL_TYPE_COMPANY indicates the email address is from a company.
   EMAIL_TYPE_COMPANY = 3;
+  // EMAIL_TYPE_OTHER indicates the email address is of a type not captured with
+  // the other values.
   EMAIL_TYPE_OTHER = 4;
+  // EMAIL_TYPE_EDUCATION indicates the email address is from an educational
+  // instutition, e.g. email@stanford.edu.
   EMAIL_TYPE_EDUCATION = 5;
+  // EMAIL_TYPE_NFP indicates the email address is from a non-profit.
   EMAIL_TYPE_NFP = 6;
 }
 
+// The type of phone line.
 enum PhoneLineType {
   PHONE_LINE_TYPE_UNSPECIFIED = 0;
+  // PHONE_LINE_TYPE_MOBILE indicates a mobile phone.
   PHONE_LINE_TYPE_MOBILE = 1;
+  // PHONE_LINE_TYPE_LANDLINE indicates a landline.
   PHONE_LINE_TYPE_LANDLINE = 2;
+  // PHONE_LINE_TYPE_VOIP indicates the phone line is voice over IP (VOIP).
   PHONE_LINE_TYPE_VOIP = 3;
+  // PHONE_LINE_TYPE_INVALID indicates the phone line is invalid.
   PHONE_LINE_TYPE_INVALID = 4;
+  // PHONE_LINE_TYPE_PREPAID indicates the phone line is a pre-paid line.
   PHONE_LINE_TYPE_PREPAID = 5;
+  // PHONE_LINE_TYPE_OTHER indicates the line is of a type not captured with
+  // the other values.
   PHONE_LINE_TYPE_OTHER = 6;
 }
 
+// Reasons why a phone number is invalid.
 enum PhoneInvalidReason {
   PHONE_INVALID_REASON_UNSPECIFIED = 0;
+  // PHONE_INVALID_REASON_NUMBER_FORMAT indicates the format of the phone
+  // number is not valid.
   PHONE_INVALID_REASON_NUMBER_FORMAT = 1;
+  // PHONE_INVALID_REASON_INACTIVE_LINE indicates the phone line is inactive.
   PHONE_INVALID_REASON_INACTIVE_LINE = 2;
+  // PHONE_INVALID_REASON_VOIP indicates the phone number is a VOIP number.
   PHONE_INVALID_REASON_VOIP = 3;
+  // PHONE_INVALID_REASON_INVALID_TYPE indicates the type of phone number is
+  // not valid.
   PHONE_INVALID_REASON_INVALID_TYPE = 4;
+  // PHONE_INVALID_REASON_DISPOSABLE_PHONE indicates the phone number is a
+  // known disposable number.
   PHONE_INVALID_REASON_DISPOSABLE_PHONE = 5;
 }
 
+// NullableBool is used to support optional booleans (i.e. booleans that may
+// not be set).
 enum NullableBool {
   NULLABLE_BOOL_UNSPECIFIED = 0;
   NULLABLE_BOOL_FALSE = 1;
   NULLABLE_BOOL_TRUE = 2;
 }
 
+// The size of the company, as a range. Note that unbounded sizes, such as 100+
+// employees, will have employees_max set to 0.
 message CompanySize {
+  // The minimum number of employees at the company.
   int32 employees_min = 1;
+  // The maximum number of employees at the company. It will be set to 0 if
+  // there is no known maximum (e.g. 100+ employees).
   int32 employees_max = 2;
 }
 
+// Information about a company.
 message CompanyData {
+  // Name of the company.
   string name = 1;
+  // Industry that the company operates in. E.g.
   string industry = 2;
+  // The size of the company.
   CompanySize company_size = 3;
 }
