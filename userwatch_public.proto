@@ -103,10 +103,6 @@ message AnalysisResponse {
   GeoInfo geo_info = 9;
 
 
-  //X TODO: Is this always set, or only for certain outcomes?
-  //X TODO: Does this represent the set of challenges Upollo currently
-  //X       supports, or specifically the ones which are considered sufficient
-  //X       to deal with the current flags?
   repeated ChallengeType supported_challenges = 11;
 
 
