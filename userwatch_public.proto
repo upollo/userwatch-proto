@@ -349,6 +349,8 @@ message CheckEmailResponse {
   // If the email is associated with a company or education institution, data
   // about the company/institution.
   CompanyData company = 4;
+  // Email provider, ie gmail, outlook, etc
+  EmailProvider provider = 5;
 }
 
 // Contains the results of checking a password for leaks.
@@ -370,6 +372,83 @@ message CheckPhoneResponse {
   string carrier = 5;
   // A clean, consistently formatted phone number.
   string clean_number = 6;
+}
+
+// Email provider is determined by looking up MX records and
+// extracting the domains from highest priority MX record.
+enum EmailProvider {
+  // Unspecified is returned if the email address is invalid
+  //  or if no specific email provider can be determined. This is a catch all.
+  EMAIL_PROVIDER_UNSPECIFIED = 0;
+  // self hosted occurs when the email domain and mx record domain match
+  EMAIL_PROVIDER_SELFHOSTED = 1;
+  // Below here are specific providers that can be determined from MX records
+  // pphosted
+  EMAIL_PROVIDER_PPHOSTED = 2;
+  // Google
+  EMAIL_PROVIDER_GOOGLE = 3;  
+  // Outlook
+  EMAIL_PROVIDER_OUTLOOK = 4;
+  // CISCO
+  EMAIL_PROVIDER_IPHMX = 5;
+  // AMAZON
+  EMAIL_PROVIDER_AMAZON = 6;
+  // APPLE
+  EMAIL_PROVIDER_APPLE = 7;
+  // MIMECAST
+  EMAIL_PROVIDER_MIMECAST = 8;
+  // ALIBABA
+  EMAIL_PROVIDER_ALIBABA = 9;
+  // protonmail.ch
+  EMAIL_PROVIDER_PROTONMAIL = 10;
+  // yahoodns.net
+  EMAIL_PROVIDER_YAHOO = 11;
+  // prodigy.net
+  EMAIL_PROVIDER_INFINITUM = 12;
+  // qq.com
+  EMAIL_PROVIDER_QQ = 13;
+  // cloudfilter.net
+  EMAIL_PROVIDER_CLOUDFILTER = 14;
+  // icloud.com
+  EMAIL_PROVIDER_ICLOUD = 15;
+  // mail.com
+  EMAIL_PROVIDER_MAIL = 16;
+  //ppe-hosted.com
+  EMAIL_PROVIDER_PPEHOSTED = 17;
+  // mail.ru
+  EMAIL_PROVIDER_MAILRU = 18;
+  // messagelabs.com.
+  EMAIL_PROVIDER_MESSAGELABS = 19;
+  // cscdns.net.
+  EMAIL_PROVIDER_CSCDNS = 20;
+  // mailerhost.net.
+  EMAIL_PROVIDER_MAILERHOST = 21;
+  // barracudanetworks.com.
+  EMAIL_PROVIDER_BARRACUDANETWORKS = 22;
+  // mxrecord.io.
+  EMAIL_PROVIDER_CLOUDFLARE = 23;
+  // fireeyecloud.com
+  EMAIL_PROVIDER_FIREEYE = 24;
+  // microsoft.com. this is a different MX record to outlook
+  EMAIL_PROVIDER_MICROSOFT = 25;
+  // hostedemail.com.
+  EMAIL_PROVIDER_HOSTEDEMAIL = 26;
+  // zoho.com.
+  EMAIL_PROVIDER_ZOHO = 27;
+  // trendmicro.com.
+  EMAIL_PROVIDER_TRENDMICRO = 28;
+  // above.com.
+  EMAIL_PROVIDER_ABOVE = 29;
+  // mailcontrol.com.
+  EMAIL_PROVIDER_MAILCONTROL = 30;
+  // centurylink.com.
+  EMAIL_PROVIDER_CENTURYLINK = 31;
+  // chartercom.com.
+  EMAIL_PROVIDER_CHARTERCOM = 32;
+  // gpphosted.com.
+  EMAIL_PROVIDER_GPPHOSTED = 33;
+  // frontbridge.com.
+  EMAIL_PROVIDER_FRONTBRIDGE = 34;
 }
 
 // A reason why the email address is not valid.
