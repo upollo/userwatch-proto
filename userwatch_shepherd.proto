@@ -151,3 +151,7 @@ message TrackEventRequest {
   UserInfo userinfo = 1;
   Event event = 2;
 }
+
+message CompanyInfoFetchRequest {
+  string domain = 1;
+}
