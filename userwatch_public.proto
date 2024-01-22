@@ -115,6 +115,10 @@ message AnalysisResponse {
   CheckEmailResponse email_analysis = 13;
   CheckPhoneResponse phone_analysis = 14;
 
+  // The matched users who were multi account
+  // This field is only present in webhooks and serverside tokens
+  repeated UserInfo multi_accounting_matched_users = 15;
+
   reserved 2, 5;
   reserved "trustScore", "history";
 }
@@ -217,6 +221,17 @@ enum FlagType {
   MULTIPLE_ACCOUNTS = 24;
   ALREADY_USED_EMAIL = 25;
   ALREADY_USED_PHONE = 26;
+  // LIMITED_DEVICE_INFORMATION indicates that the device did not have
+  // sufficient information to perform a detailed assessment.
+  LIMITED_DEVICE_INFORMATION = 27;
+
+  COMMERCIAL_USER = 28;
+
+  PAYMENT_NAME_DIFFERS = 29;
+
+  // TRIALED_ON_OTHER_ACCOUNT indicates that the person is currently or has in
+  // meaningfully recent history trialed the product using a different account.
+  TRIALED_ON_OTHER_ACCOUNT = 30;
 }
 // protolint:enable ENUM_FIELD_NAMES_PREFIX
 
